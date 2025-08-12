@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"text/template"
@@ -10,10 +9,10 @@ import (
 
 // Our Handlers, it handels rendering stuff to user
 // *http.request param is a pointer to a struct which holds info like http method and URL
-func home(w http.ResponseWriter, r *http.Request) {
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// add 404
 	if r.URL.Path != "/" {
-		http.NotFound(w, r)
+		app.notFound(w) //Use our helpers
 		return
 	}
 	//init a slice to combine our two files
@@ -28,24 +27,22 @@ func home(w http.ResponseWriter, r *http.Request) {
 	//If err, we log and send a 500 Internal Server error response
 	ts, err := template.ParseFiles(files...) //Relative to root of project instead of Hardcoded
 	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
+		app.serverError(w, err) //Use our helper
 		return
 	}
 
 	//We use Execute() on template set to write template content as reponse body
 	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
+		app.serverError(w, err) //use the serverError() helper
 	}
 
 }
-func snippetView(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
+		app.notFound(w) //see helper.go
 		return
 	}
 	//use the printf to interpolate the id value with our response
@@ -55,13 +52,13 @@ func snippetView(w http.ResponseWriter, r *http.Request) {
 	//Whatever being written will be sent as the body of the HTTP response.
 }
 
-func snippetCreate(w http.ResponseWriter, r *http.Request) { //
+func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) { //
 	//use r.Method to check if its post or not, POST causes a change to server so should be only way to do that
 	if r.Method != http.MethodPost {
 		//if its not, we use w.WriteHeader() to send 405 status (Method not allowed)
 		//This is good security to avoid being hit with errent hits, and in the future this will be a DB call
 		w.Header().Set("Allow", http.MethodPost)
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
 	w.Write([]byte("Create a new snippet zone..."))
