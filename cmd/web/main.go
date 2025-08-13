@@ -92,3 +92,13 @@ func openDB(dsn string) (*sql.DB, error) {
 //This makes it very fast but we need to be mindful of race conditions in the future.
 
 //Also have total control over which DB is used at runtime with -dsn cmd line flag
+
+//DB -
+//Generally its easy to swap out the DB, you can easily do so with GO
+//still you have to remember to change the syntax
+//Also note that GO is terrible with NULL, will throw a error as you cant convert it to string
+//It does have a special type, but its easier to set constraints on DB columns to avoid null.
+//Terraform TODO list
+
+//1. Create mysql server with config, put into a env file and have go uptake that to get the secrets
+//2.

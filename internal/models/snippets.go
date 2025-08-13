@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -50,7 +51,65 @@ func (m *SnippetModel) Insert(title string, content string, expires int) (int, e
 
 // This returns 10 most recent snips
 func (m *SnippetModel) Latest() ([]*Snippet, error) {
-	return nil, nil
+	//SQL
+	stmt := "SELECT id, title, content, created, expires FROM snippets WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10"
+
+	//Use Query method to exec, returns more than one row tho!
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	//Ensure prop closed, after connection
+	//Always have, if not, connection is open and many things start to go wrong as you scale
+
+	defer rows.Close()
+	snippets := []*Snippet{}
+	//init empty slice to hold struct
+
+	//loop thru the resultset
+	for rows.Next() {
+		s := &Snippet{}
+		//we use rows.scan to copy values from each field in the row to a new object we created.
+		//new objects must be pointers
+		err = rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+		if err != nil {
+			return nil, err
+		}
+		//Append to slice of snippets
+		snippets = append(snippets, s)
+	}
+
+	//When loop finished, call rows.err to get any err if any
+	//Never assume success with Databases, ensure it
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return snippets, nil
+	//If ok, return snippets slice
+}
+
+func (m *SnippetModel) Get(id int) (*Snippet, error) {
+	//SQL
+	stmt := "SELECT id, title, content, created, expires FROM snippets WHERE expires > UTC_TIMESTAMP() AND id = ?"
+	//use of query row instead on conn pool as we only want a single row result
+	row := m.DB.QueryRow(stmt, id)
+	s := &Snippet{}
+	//Pointer to a new zeroed snippet struct
+
+	//Use row.Scan() to copy values from each field in row to snip struct
+	err := row.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+	if err != nil {
+		//If Query returns no rows, scan returns a ErrNowRows error.
+		//We should use errors.IS function to check for that err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+	//if everything is OK, then return our snip object
+	return s, nil
 }
 
 //Were adding this new snippet struct to represent data for snippet along with our

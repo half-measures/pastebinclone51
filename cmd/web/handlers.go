@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"snippetbox/internal/models"
 	"strconv"
 	"text/template"
 )
@@ -15,6 +17,15 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w) //Use our helpers
 		return
 	}
+	snippets, err := app.snippets.Latest()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	for _, snippet := range snippets {
+		fmt.Fprintf(w, "%+v\n", snippet)
+	}
+
 	//init a slice to combine our two files
 	//note that base template must come first in slice
 	files := []string{
@@ -45,11 +56,19 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w) //see helper.go
 		return
 	}
-	//use the printf to interpolate the id value with our response
-	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
-	//fprintf is a type interface and the http.responsewriter object satifys the req of  interface needed as it has a w.write() method
-	//For now, when we see a io.Writer Param, its ok to pass your responseWriterobject.
-	//Whatever being written will be sent as the body of the HTTP response.
+	//use the snippetmodel object get method to get data for a record based on its ID
+	//if none found, retrn 404 not found
+	snippet, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+	//write snip data back as plaintext HTTP
+	fmt.Fprintf(w, "%+v", snippet)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
