@@ -1,10 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"log"
 	"net/http"
 	"os"
+
+	"snippetbox/internal/models"
+
+	_ "github.com/go-sql-driver/mysql" //special bit, when underscore we force import it
 )
 
 //Main is used for runtime config, dependencies for handlers and HTTP running
@@ -14,12 +19,15 @@ import (
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
 	//remember ports 0-1023 are restricted
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	// default value of 4000 set
+	dsn := flag.String("dsn", "web:auxwork@/snippetbox?parseTime=true", "MySQL data source name")
+
 	flag.Parse() //Sanitizes the arg coming in just in case
 	//we really really would want env vars but the drawback is no default setting out of the box
 	//and no -help function
@@ -28,10 +36,17 @@ func main() {
 	// create logger for writing errs but we want stderr as dest
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	db, err := openDB(*dsn)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+	defer db.Close() //Always have, we want connection POOL to close before main func exits
+
 	// init a new instance of app struct for dependencies
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
+		snippets: &models.SnippetModel{DB: db},
 	}
 
 	//init a new server struct to use custom errorLog in problem event
@@ -42,11 +57,25 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	errorLog.Fatal(err)
 
 	//Set Cache control header, if another Cache-Control header exists this will overwrite it
 
+}
+
+// OpenDB() function wraps sql.open and returns the sql.DB connection pool
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn) //sql.open dosent create any connections, just inits a pool
+	if err != nil {
+		return nil, err
+
+	} //ping to check if the connection is good
+	if err = db.Ping(); err != nil {
+		return nil, err
+
+	}
+	return db, nil
 }
 
 //Web App basics include a handler - its a bit like a controller and do app logic
@@ -61,3 +90,5 @@ func main() {
 
 //Also, all HTTP connections are served via there own goroutine
 //This makes it very fast but we need to be mindful of race conditions in the future.
+
+//Also have total control over which DB is used at runtime with -dsn cmd line flag
