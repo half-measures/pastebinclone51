@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 // lets cut down on repeating
@@ -53,4 +54,11 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 	// Execute the template set and write the response body. Again, if there
 	// is any error we call the the serverError() helper.
 	buf.WriteTo(w)
+}
+
+// func to help return a pointer to templatedata struct init with current year.
+func (app *application) newTemplateData(r *http.Request) *templateData {
+	return &templateData{
+		CurrentYear: time.Now().Year(),
+	}
 }

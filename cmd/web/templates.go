@@ -10,8 +10,9 @@ import (
 //Go has a limit of one per page, this allows us to do way more
 
 type templateData struct {
-	Snippet  *models.Snippet
-	Snippets []*models.Snippet //including a snippets field to hold a slice of snippets
+	CurrentYear int
+	Snippet     *models.Snippet
+	Snippets    []*models.Snippet //including a snippets field to hold a slice of snippets
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
