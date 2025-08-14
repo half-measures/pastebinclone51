@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"snippetbox/internal/models"
 	"text/template"
+	"time"
 )
 
 //Define template data struct to hold our dynamic data
@@ -13,6 +14,16 @@ type templateData struct {
 	CurrentYear int
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet //including a snippets field to hold a slice of snippets
+}
+
+// Formating a nicer string for time
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
+}
+
+// init a funcmap object and store it in global var
+var functions = template.FuncMap{
+	"humanDate": humanDate,
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -27,7 +38,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		name := filepath.Base(page)
 
 		// Parse the base template file into a template set.
-		ts, err := template.ParseFiles("./ui/html/base.tmpl")
+		ts, err := template.New(name).Funcs(functions).ParseFiles("./ui/html/base.tmpl")
 		if err != nil {
 			return nil, err
 		}
