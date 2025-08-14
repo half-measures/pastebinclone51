@@ -11,43 +11,42 @@ import (
 
 // Our Handlers, it handels rendering stuff to user
 // *http.request param is a pointer to a struct which holds info like http method and URL
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	// add 404
 	if r.URL.Path != "/" {
-		app.notFound(w) //Use our helpers
+		app.notFound(w)
 		return
 	}
+
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%+v\n", snippet)
-	}
 
-	//init a slice to combine our two files
-	//note that base template must come first in slice
 	files := []string{
 		"./ui/html/base.tmpl",
 		"./ui/html/partials/nav.tmpl",
 		"./ui/html/pages/home.tmpl",
 	}
 
-	//Use template.ParseFiles() to read our html template file into a set
-	//If err, we log and send a 500 Internal Server error response
-	ts, err := template.ParseFiles(files...) //Relative to root of project instead of Hardcoded
+	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		app.serverError(w, err) //Use our helper
+		app.serverError(w, err)
 		return
 	}
 
-	//We use Execute() on template set to write template content as reponse body
-	err = ts.ExecuteTemplate(w, "base", nil)
-	if err != nil {
-		app.serverError(w, err) //use the serverError() helper
+	// Create an instance of a templateData struct holding the slice of
+	// snippets.
+	data := &templateData{
+		Snippets: snippets,
 	}
 
+	// Pass in the templateData struct when executing the template.
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, err)
+	}
 }
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
