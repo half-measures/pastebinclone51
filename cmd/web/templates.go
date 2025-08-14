@@ -15,33 +15,37 @@ type templateData struct {
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
-	// init new map to act as a cache
 	cache := map[string]*template.Template{}
 
-	// use the filepath.glb to get a slice of all filepaths that match the pattern
-	// gives us a slice of all filepaths that are in our apps templates folder
 	pages, err := filepath.Glob("./ui/html/pages/*.tmpl")
 	if err != nil {
 		return nil, err
 	}
-	// loop thru page filepaths one by one
+
 	for _, page := range pages {
-		//extract the file name like home.tmpl from filepath
 		name := filepath.Base(page)
-		//create slice w/ filepaths for base templates. include partials
-		files := []string{
-			"./ui/html/base.tmpl",
-			".ui/html/partials/nav.tmpl",
-			page,
-		}
-		//parse files into templateset
-		ts, err := template.ParseFiles(files...)
+
+		// Parse the base template file into a template set.
+		ts, err := template.ParseFiles("./ui/html/base.tmpl")
 		if err != nil {
 			return nil, err
 		}
-		//add template set to map
+
+		// Call ParseGlob() *on this template set* to add any partials.
+		ts, err = ts.ParseGlob("./ui/html/partials/*.tmpl")
+		if err != nil {
+			return nil, err
+		}
+
+		// Call ParseFiles() *on this template set* to add the  page template.
+		ts, err = ts.ParseFiles(page)
+		if err != nil {
+			return nil, err
+		}
+
+		// Add the template set to the map as normal...
 		cache[name] = ts
 	}
-	// return map
+
 	return cache, nil
 }
