@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"text/template"
 
 	"snippetbox/internal/models"
 
@@ -17,9 +18,10 @@ import (
 // Define our App struct to hold app wide dependencies,
 // for now, just custom loggers
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *models.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -41,12 +43,16 @@ func main() {
 		errorLog.Fatal(err)
 	}
 	defer db.Close() //Always have, we want connection POOL to close before main func exits
-
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
 	// init a new instance of app struct for dependencies
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		snippets: &models.SnippetModel{DB: db},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		snippets:      &models.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	//init a new server struct to use custom errorLog in problem event
