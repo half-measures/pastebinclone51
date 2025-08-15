@@ -1,6 +1,9 @@
 package main
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 func secureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -20,6 +23,21 @@ func (app *application) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.infoLog.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
 
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) recoverPanic(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//create defer func which is run always to catch panic and unwind the stack
+		defer func() {
+			if err := recover(); err != nil {
+				//set conn close header on reponse
+				w.Header().Set("Connection", "close") //acts as a trigger to make http server close the current connection after, closing the connection
+				//internal server response
+				app.serverError(w, fmt.Errorf("%s", err))
+			}
+		}()
 		next.ServeHTTP(w, r)
 	})
 }
