@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"snippetbox/internal/models"
 	"strconv"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -67,13 +69,36 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	//use postform.get to get title and content from form from user
 	title := r.PostForm.Get("title")
 	content := r.PostForm.Get("content")
-
 	//postform.get always returns data as *string but we are expecting expires to be a number
 	//we need to manually convert form data to integer using strconv and send
 	//400 bad request if failed.
 	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	//init a map to hold any validation errors from taking in the form fields
+	fieldErrors := make(map[string]string)
+
+	//check not blank and not more than 100c's long
+	if strings.TrimSpace(title) == "" {
+		fieldErrors["title"] = "This field cannot be blank"
+	} else if utf8.RuneCountInString(title) > 100 {
+		fieldErrors["title"] = "This field cannot be more than 100 c's long"
+	}
+
+	//check content is not blank
+	if strings.TrimSpace(content) == "" {
+		fieldErrors["content"] = "This field cannot be blank, fill it in"
+	}
+	//check expires
+	if expires != 1 && expires != 7 && expires != 365 {
+		fieldErrors["expires"] = "This field must equal 1, 7 or 365"
+	}
+
+	// error check, dump any in plain http response and return
+	if len(fieldErrors) > 0 {
+		fmt.Fprint(w, fieldErrors)
 		return
 	}
 
