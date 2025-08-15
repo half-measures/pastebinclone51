@@ -108,3 +108,10 @@ func openDB(dsn string) (*sql.DB, error) {
 
 //1. Create mysql server with config, put into a env file and have go uptake that to get the secrets
 //2.
+
+//Routing notes
+//Many to pick from, some have quirks
+//best seem to be go-chi/chi, gorilla/mux, or julientschmidt/httprouter
+//all three have good docs, tests, and work
+//julien seems to be the most lightweight and fast, chi adds regexp patterns and groupings
+//gorilla is most full featured yet slow.
