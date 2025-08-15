@@ -14,4 +14,12 @@ func secureHeaders(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 } //as we want middleware to act on all requests, we need this to exec before request hits our servemux.
-//secureHeaders -> servemux -> application handler
+// secureHeaders -> servemux -> application handler
+// below we create a log request using the std middleware pattern with httpfunc inside it
+func (app *application) logRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.infoLog.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
+
+		next.ServeHTTP(w, r)
+	})
+}
