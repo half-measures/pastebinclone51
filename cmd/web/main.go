@@ -7,9 +7,12 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
 	"snippetbox/internal/models"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql" //special bit, when underscore we force import it
 )
@@ -19,11 +22,12 @@ import (
 // Define our App struct to hold app wide dependencies,
 // for now, just custom loggers
 type application struct {
-	errorLog      *log.Logger
-	infoLog       *log.Logger
-	snippets      *models.SnippetModel
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	errorLog       *log.Logger
+	infoLog        *log.Logger
+	snippets       *models.SnippetModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -31,7 +35,7 @@ func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	// default value of 4000 set
 	dsn := flag.String("dsn", "web:auxwork@/snippetbox?parseTime=true", "MySQL data source name")
-
+	//	todo- change password, hide this, use Env
 	flag.Parse() //Sanitizes the arg coming in just in case
 	//we really really would want env vars but the drawback is no default setting out of the box
 	//and no -help function
@@ -50,14 +54,20 @@ func main() {
 		errorLog.Fatal(err)
 	}
 	formDecoder := form.NewDecoder() //init decoder instance to add to below dependencies
+	//use new! scs to init session mgmer
+	//config to use mysql as store and expires in 48hrs
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 48 * time.Hour
 
 	// init a new instance of app struct for dependencies
 	app := &application{
-		errorLog:      errorLog,
-		infoLog:       infoLog,
-		snippets:      &models.SnippetModel{DB: db},
-		templateCache: templateCache,
-		formDecoder:   formDecoder,
+		errorLog:       errorLog,
+		infoLog:        infoLog,
+		snippets:       &models.SnippetModel{DB: db},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	//init a new server struct to use custom errorLog in problem event
@@ -112,7 +122,15 @@ func openDB(dsn string) (*sql.DB, error) {
 //Terraform TODO list
 
 //1. Create mysql server with config, put into a env file and have go uptake that to get the secrets
-//2.
+//2.Create two tables in same DB (snippetbox)
+//	one being s
+// 2nd being sessions (used for session manager stuff)
+//		make sure to do password changine, and secrets file .env
+//Gen will need two users, web and root. Root to do a one time password create and the above stuff
+//webb to access, make sure to give web abilities to create but not delete
+
+//sessions has only three fields, has sessions data to share inbetween http requests stores as BLOB
+//scs package auto deletes expired sessions to keep table tidy
 
 //Routing notes
 //Many to pick from, some have quirks
