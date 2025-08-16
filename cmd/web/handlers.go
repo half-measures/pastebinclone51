@@ -14,10 +14,10 @@ import (
 // struct to represent form data for form fields
 // struct must be exported and capitalized in order to be read by html/template package
 type snippetCreateForm struct {
-	Title               string
-	Content             string
-	Expires             int
-	validator.Validator //goes to Validators.go, embedding means this inherits all fields of the type Validator
+	Title               string     `form:"title"`
+	Content             string     `form:"content"`
+	Expires             int        `form:"expires"`
+	validator.Validator `form:"-"` //goes to Validators.go, embedding means this inherits all fields of the type Validator
 }
 
 // Our Handlers, it handels rendering stuff to user
@@ -73,27 +73,15 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 
-	err := r.ParseForm()
+	// declare new empty instance of struct for decode method usage
+	var form snippetCreateForm
+	// call decode passing in current request and *pointer to createformstruct
+	// this fills our struct will right values form html form, if err, do the thing
+	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-
-	//get expires value from form as normal
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-	form := snippetCreateForm{
-		//use postform.get to get title and content from form from user
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
-	}
-	//postform.get always returns data as *string but we are expecting expires to be a number
-	//we need to manually convert form data to integer using strconv and send
-	//400 bad request if failed.
 
 	//init a map to hold any validation errors from taking in the form fields
 

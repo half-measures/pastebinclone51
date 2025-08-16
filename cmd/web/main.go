@@ -10,6 +10,7 @@ import (
 
 	"snippetbox/internal/models"
 
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql" //special bit, when underscore we force import it
 )
 
@@ -22,6 +23,7 @@ type application struct {
 	infoLog       *log.Logger
 	snippets      *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 func main() {
@@ -47,12 +49,15 @@ func main() {
 	if err != nil {
 		errorLog.Fatal(err)
 	}
+	formDecoder := form.NewDecoder() //init decoder instance to add to below dependencies
+
 	// init a new instance of app struct for dependencies
 	app := &application{
 		errorLog:      errorLog,
 		infoLog:       infoLog,
 		snippets:      &models.SnippetModel{DB: db},
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
 	}
 
 	//init a new server struct to use custom errorLog in problem event

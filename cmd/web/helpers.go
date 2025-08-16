@@ -2,10 +2,13 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"runtime/debug"
 	"time"
+
+	"github.com/go-playground/form/v4"
 )
 
 // lets cut down on repeating
@@ -61,4 +64,27 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		CurrentYear: time.Now().Year(),
 	}
+}
+
+// this decode helper
+func (app *application) decodePostForm(r *http.Request, dst any) error {
+	//call parseform() on request in same way we did on createsnipperpost handler
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+	// call decode on instance and pass target dest for first pram
+	err = app.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
+		//if we use invalid dest, decode method will return a error with *form.InvalidDecoderError
+		//use errorAs to check
+		var InvalidDecoderError *form.InvalidDecoderError
+		if errors.As(err, &InvalidDecoderError) {
+			panic(err)
+		}
+		//for all other errs, return as normal
+		return err
+	}
+	return nil
+
 }
