@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"log"
@@ -59,6 +60,8 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 48 * time.Hour
+	sessionManager.Cookie.Secure = true //Set to mean cookie will only be sent
+	//by users web browser when HTTPS conn is being used, never over HTTP
 
 	// init a new instance of app struct for dependencies
 	app := &application{
@@ -69,16 +72,24 @@ func main() {
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
 	}
-
+	//below is a struct to hold non-default TLS settings for server to use
+	//want only elliptic curves used for performance
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
 	//init a new server struct to use custom errorLog in problem event
 	srv := &http.Server{
-		Addr:     *addr,
-		ErrorLog: errorLog,
-		Handler:  app.routes(),
+		Addr:         *addr,
+		ErrorLog:     errorLog,
+		Handler:      app.routes(),
+		TLSConfig:    tlsConfig,        //sets tlsconfig for optimal https use under heavy load
+		IdleTimeout:  time.Minute,      //After 1min of inactive, close connection
+		ReadTimeout:  5 * time.Second,  //5s, migtigate risk from slow client attacks
+		WriteTimeout: 10 * time.Second, //10s,
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem") //required for HTTPS
 	errorLog.Fatal(err)
 
 	//Set Cache control header, if another Cache-Control header exists this will overwrite it
@@ -131,6 +142,9 @@ func openDB(dsn string) (*sql.DB, error) {
 
 //sessions has only three fields, has sessions data to share inbetween http requests stores as BLOB
 //scs package auto deletes expired sessions to keep table tidy
+//3. Must automate self signed Cert in terraform via bash
+//req cert.pem + key.pem to be in the ./tls/ folder together for HTTPS to work
+//4. Set up two users in the linux dist, app and root. Web does need read permissions on certs
 
 //Routing notes
 //Many to pick from, some have quirks
@@ -138,3 +152,9 @@ func openDB(dsn string) (*sql.DB, error) {
 //all three have good docs, tests, and work
 //julien seems to be the most lightweight and fast, chi adds regexp patterns and groupings
 //gorilla is most full featured yet slow.
+
+//self signing a TLS cert
+//HTTPS is just http with TLS connection
+//the TLS conn is crypted and signed which means no snooping
+//For prod, Let's Encrypt best
+//Self signed is same as TLS normal, but not signed by trusted Authority which means all browsers raise a yellow flag

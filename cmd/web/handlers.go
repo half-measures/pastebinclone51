@@ -54,15 +54,11 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	// use popstring to get value for a flash key, also deletes key and value from session data
-	// so its like a onetime fetch
-	flash := app.sessionManager.PopString(r.Context(), "flash")
 
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
 	// Use the new render helper.
 
-	data.Flash = flash
 	app.render(w, http.StatusOK, "view.tmpl", data)
 }
 
