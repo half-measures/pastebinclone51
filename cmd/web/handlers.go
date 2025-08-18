@@ -20,6 +20,13 @@ type snippetCreateForm struct {
 	validator.Validator `form:"-"` //goes to Validators.go, embedding means this inherits all fields of the type Validator
 }
 
+type userSignupForm struct {
+	Name                string `form:"name"`
+	Email               string `form:"email"`
+	Password            string `form:password"`
+	validator.Validator `form:"-"`
+}
+
 // Our Handlers, it handels rendering stuff to user
 // *http.request param is a pointer to a struct which holds info like http method and URL
 
@@ -115,11 +122,13 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 // Login Area funcs
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	//signing up a new user
-
+	data := app.newTemplateData(r)
+	data.Form = userSignupForm{}
+	app.render(w, http.StatusOK, "signup.tmpl", data)
 }
 
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
-	// Create a new user
+
 }
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
 	// Hisplay html form for logging in user
