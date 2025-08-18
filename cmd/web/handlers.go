@@ -26,6 +26,11 @@ type userSignupForm struct {
 	Password            string `form:"password"`
 	validator.Validator `form:"-"`
 }
+type userLoginForm struct {
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	validator.Validator `form:"-"`
+}
 
 // Our Handlers, it handels rendering stuff to user
 // *http.request param is a pointer to a struct which holds info like http method and URL
@@ -175,6 +180,9 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 }
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
 	// Hisplay html form for logging in user
+	data := app.newTemplateData(r)
+	data.Form = userLoginForm{}
+	app.render(w, http.StatusOK, "login.tmpl", data)
 }
 func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	// Auth and login the user
