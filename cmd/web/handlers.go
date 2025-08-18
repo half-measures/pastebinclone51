@@ -111,3 +111,22 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	// Redirect the user to the relevant page for the snippet.
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
+
+// Login Area funcs
+func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
+	//signing up a new user
+
+}
+
+func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
+	// Create a new user
+}
+func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
+	// Hisplay html form for logging in user
+}
+func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
+	// Auth and login the user
+}
+func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+	// logout the user
+}

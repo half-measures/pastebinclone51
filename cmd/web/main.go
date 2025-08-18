@@ -26,6 +26,7 @@ type application struct {
 	errorLog       *log.Logger
 	infoLog        *log.Logger
 	snippets       *models.SnippetModel
+	users          *models.UserModel
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
@@ -68,6 +69,7 @@ func main() {
 		errorLog:       errorLog,
 		infoLog:        infoLog,
 		snippets:       &models.SnippetModel{DB: db},
+		users:          &models.UserModel{DB: db},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
@@ -142,6 +144,8 @@ func openDB(dsn string) (*sql.DB, error) {
 
 //sessions has only three fields, has sessions data to share inbetween http requests stores as BLOB
 //scs package auto deletes expired sessions to keep table tidy
+//3rd table is users, 11.2 - create table cmd and alter table to add constraint on email column
+
 //3. Must automate self signed Cert in terraform via bash
 //req cert.pem + key.pem to be in the ./tls/ folder together for HTTPS to work
 //4. Set up two users in the linux dist, app and root. Web does need read permissions on certs
