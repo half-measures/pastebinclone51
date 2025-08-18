@@ -41,3 +41,17 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func (app *application) requireAuthentication(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//if user is not auth, redirect them to login page so that they cant get around auth
+		if !app.isAuthenticated(r) {
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+			return
+		}
+		//otherwise set cache nostore header so pages that need auth are not stored in cache
+		w.Header().Add("Cache-Control", "no-store")
+		//
+		next.ServeHTTP(w, r)
+	})
+}
