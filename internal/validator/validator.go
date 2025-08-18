@@ -1,9 +1,13 @@
 package validator
 
 import (
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
+
+// sanity checking the email address, parsing this all at startup and storing it for performance
+var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 //Generaly this is a map of potential errors and checks to see if any errors return true
 //
@@ -54,4 +58,15 @@ func PermittedInt(value int, permittedValues ...int) bool {
 		}
 	}
 	return false
+}
+
+// MinChars() returns true if a value contains at least n characters.
+func MinChars(value string, n int) bool {
+	return utf8.RuneCountInString(value) >= n
+}
+
+// Matches() returns true if a value matches a provided compiled regular
+// expression pattern.
+func Matches(value string, rx *regexp.Regexp) bool {
+	return rx.MatchString(value)
 }

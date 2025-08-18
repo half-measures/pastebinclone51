@@ -8,5 +8,5 @@ var (
 	ErrInvalidCredentials = errors.New("models: invalid credentials")
 
 	// email must be uniq, its a constraint on the mysql table column
-	ErrDupelicateEmail = errors.New("models: dupelicate email")
+	ErrDuplicateEmail = errors.New("models: duplicate email")
 )
