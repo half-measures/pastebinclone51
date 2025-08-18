@@ -186,6 +186,49 @@ func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
 }
 func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	// Auth and login the user
+	var form userLoginForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	// validation checks on form, check both email and pass provided and formatting of email
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be valid email")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, "login.tmpl", data)
+		return
+	}
+	// check if cred are valid, if not add nonfielderr and goback2login
+	id, err := app.users.Authenticate(form.Email, form.Password)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.AddNonFieldError("Email or password is incorrect")
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, http.StatusUnprocessableEntity, "login.tmpl", data)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	// use renewtocken on current session to change sessID,
+	// always generate a new session IF when auth state or priv changes for user
+	err = app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	// add id of current user to session so they are not logged in!
+	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+	// redirect user to create a snippet
+	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
+
 }
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
 	// logout the user
