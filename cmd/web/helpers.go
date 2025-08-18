@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-playground/form/v4"
+	"github.com/justinas/nosurf"
 )
 
 // lets cut down on repeating
@@ -68,6 +69,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 
 		//auth status to template data
 		IsAuthenticated: app.isAuthenticated(r),
+		CSRFToken:       nosurf.Token(r), //added for sec
 	}
 }
 

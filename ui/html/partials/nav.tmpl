@@ -2,15 +2,15 @@
 <nav>
     <div>
         <a href='/'>Home</a>
-        <!-- Toggle the link based on authentication status -->
-        {{if .IsAuthenticated}}
+         {{if .IsAuthenticated}}
             <a href='/snippet/create'>Create snippet</a>
         {{end}}
     </div>
     <div>
-        <!-- Toggle the links based on authentication status -->
         {{if .IsAuthenticated}}
             <form action='/user/logout' method='POST'>
+                <!-- Include the CSRF token -->
+                <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                 <button>Logout</button>
             </form>
         {{else}}

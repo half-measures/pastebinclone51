@@ -17,6 +17,7 @@ type templateData struct {
 	Form            any               //Used to pass validation errors back to template when re-display form so users dont have to enter it again
 	Flash           string            //added for sessionmanager stuff
 	IsAuthenticated bool              //used in helper.go
+	CSRFToken       string            //used in preventing attacks,
 }
 
 // Formating a nicer string for time
