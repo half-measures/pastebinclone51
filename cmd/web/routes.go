@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"snippetbox/ui"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
@@ -17,9 +18,12 @@ func (app *application) routes() http.Handler {
 		app.notFound(w)
 	})
 
+	//
+
 	// Update the pattern for the route for the static files.
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
+	fileServer := http.FileServer(http.FS(ui.Files))
+	//static files are in diff folder so we dont need to strip anything
+	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
 
 	// create new middleware chain for dynamic routes
 	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate) //nosurf added for CSRF protection
