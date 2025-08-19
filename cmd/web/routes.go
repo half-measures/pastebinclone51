@@ -25,6 +25,9 @@ func (app *application) routes() http.Handler {
 	//static files are in diff folder so we dont need to strip anything
 	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
 
+	//add new GET /ping route used in tests
+	router.HandlerFunc(http.MethodGet, "/ping", ping)
+
 	// create new middleware chain for dynamic routes
 	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate) //nosurf added for CSRF protection
 
