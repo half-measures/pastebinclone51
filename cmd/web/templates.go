@@ -24,7 +24,12 @@ type templateData struct {
 
 // Formating a nicer string for time
 func humanDate(t time.Time) string {
-	return t.Format("02 Jan 2006 at 15:04")
+	//return empty if time has zero value
+	if t.IsZero() {
+		return ""
+	}
+	//convert to UTC before formmating it
+	return t.UTC().Format("02 Jan 2006 at 15:04")
 }
 
 // init a funcmap object and store it in global var
