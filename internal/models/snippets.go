@@ -18,7 +18,13 @@ type Snippet struct {
 
 type SnippetModel struct {
 	DB *sql.DB
-} //Defines snip model to wrap a sql connection pool
+} //Defines snip model to wrap a sql connection
+
+type SnippetModelInterface interface {
+	Insert(title string, content string, expires int) (int, error)
+	Get(id int) (*Snippet, error)
+	Latest() ([]*Snippet, error)
+} //used in tests
 
 func (m *SnippetModel) Insert(title string, content string, expires int) (int, error) {
 	// Write the SQL statement we want to execute. I've split it over two lines
