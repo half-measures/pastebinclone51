@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"database/sql"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -37,12 +36,11 @@ func main() {
 	//remember ports 0-1023 are restricted
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	// default value of 4000 set
-	sqlSecret := getSQLSecret()
 
-	dsnPlaceholder := flag.String("dsn", "web:auxwork@/snippetbox?parseTime=true", "MySQL data source name")
+	dsn := flag.String("dsn", "web:auxwork@/snippetbox?parseTime=true", "MySQL data source name")
 	//	todo- change password, hide this, use Env
 	flag.Parse() //Sanitizes the arg coming in just in case
-	finalDSN := fmt.Sprintf(*dsnPlaceholder, sqlSecret)
+
 	//we really really would want env vars but the drawback is no default setting out of the box
 	//and no -help function
 
@@ -50,7 +48,7 @@ func main() {
 	// create logger for writing errs but we want stderr as dest
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	db, err := openDB(finalDSN)
+	db, err := openDB(*dsn)
 	if err != nil {
 		errorLog.Fatal(err)
 	}
