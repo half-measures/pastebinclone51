@@ -2,3 +2,4 @@ tls/
 tls/
 secret/
 .json
+config.json
