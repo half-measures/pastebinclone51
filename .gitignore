@@ -3,3 +3,4 @@ tls/
 secret/
 .json
 config.json
+cmd/web/config.json

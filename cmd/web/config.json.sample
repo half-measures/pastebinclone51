@@ -1,0 +1,3 @@
+{
+    "dsn": "user:password@/database?parseTime=true"
+}
