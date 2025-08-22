@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"database/sql"
+	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
@@ -17,6 +18,11 @@ import (
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql" //special bit, when underscore we force import it
 )
+
+// Add a config struct
+type config struct {
+	DSN string `json:"dsn"`
+}
 
 //Main is used for runtime config, dependencies for handlers and HTTP running
 
@@ -37,8 +43,18 @@ func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	// default value of 4000 set
 
-	dsn := flag.String("dsn", "web:auxwork@/snippetbox?parseTime=true", "MySQL data source name")
+	// dsn := flag.String("dsn", "web:auxwork@/snippetbox?parseTime=true", "MySQL data source name")
 	//	todo- change password, hide this, use Env
+	file, err := os.ReadFile("./cmd/web/config.json")
+	if err != nil {
+		log.Fatalf("Failed to read config file: %v", err)
+	}
+
+	var cfg config
+	err = json.Unmarshal(file, &cfg)
+	if err != nil {
+		log.Fatalf("Failed to unmarshal config: %v", err)
+	}
 	flag.Parse() //Sanitizes the arg coming in just in case
 
 	//we really really would want env vars but the drawback is no default setting out of the box
@@ -48,7 +64,7 @@ func main() {
 	// create logger for writing errs but we want stderr as dest
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	db, err := openDB(*dsn)
+	db, err := openDB(cfg.DSN)
 	if err != nil {
 		errorLog.Fatal(err)
 	}
