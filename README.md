@@ -18,17 +18,20 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 *   [Go](https://golang.org/) (version 1.18 or newer)
-*   [MySQL](https://www.mysql.com/)
+*   [MySQL](https://www.mysql.com/) (any V)
 
 ### Installation
 
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/your-username/snippetbox.git
-    cd snippetbox
+    sudo apt install mysql-server
+    sudo apt install golang-go
+    
+    cd pastebinclone51
     ```
 
-2.  **Database Setup:**
+2.  **Database Setup:** 3 DB total
     *   Connect to your MySQL instance and create a new database for the project.
         ```sql
         CREATE DATABASE snippetbox CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
