@@ -1,8 +1,9 @@
 # Start from a Go base image
 FROM golang:1.24.5-alpine
 
-# Install git and mysql-client for database setup along with SSL
+# Install git and mysql-client for database setup along with SSL inside the container as a command in shell
 RUN apk add --no-cache git mysql-client openssl
+RUN mkdir -p tls
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -15,6 +16,8 @@ RUN go mod download
 # Copy the rest of the application source code from current Dir to /app in container
 COPY . .
 
+RUN ls -la entrypoint.sh && sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
+
 # Build the application binary
 RUN go build -o /app/snippetbox ./cmd/web
 
@@ -22,4 +25,5 @@ RUN go build -o /app/snippetbox ./cmd/web
 EXPOSE 4000
 
 # Set the entrypoint script which will start the application
-ENTRYPOINT ["./entrypoint.sh"]
+#ENTRYPOINT ["./entrypoint.sh"]
+

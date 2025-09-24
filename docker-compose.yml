@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: .
-      #dockerfile: Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "4000:4000"
     depends_on:
@@ -12,6 +12,7 @@ services:
       - ./cmd/web/config.json:/app/cmd/web/config.json
       - ./tls:/app/tls
     restart: unless-stopped
+
 
   db:
     image: mysql:8.0
