@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      #dockerfile: Dockerfile
     ports:
       - "4000:4000"
     depends_on:
@@ -27,4 +27,10 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 3
+    volumes:
+      - ./initdb:/docker-entrypoint-initdb.d
+      - mysql_data:/var/lib/mysql   #persist mysql data
+
+volumes:
+  mysql_data:
