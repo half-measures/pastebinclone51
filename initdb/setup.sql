@@ -1,5 +1,5 @@
 
-CREATE TABLE snippets (
+CREATE TABLE IF NOT EXISTS snippets (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(100) NOT NULL,
     content TEXT NOT NULL,
@@ -18,7 +18,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON snippetbox.* TO 'web'@'localhost';
 -- Important: Make sure to swap 'pass' with a password of your own choosing.
 ALTER USER 'web'@'localhost' IDENTIFIED BY 'pass';
 -- Create table for user registering
-CREATE TABLE users (
+CREATE IF NOT EXISTS TABLE users (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
@@ -30,7 +30,7 @@ ALTER TABLE users ADD CONSTRAINT users_uc_email UNIQUE (email);
 
 -- Create final table, for cookies. To scale we would use redis but thats the futures problem.
 
-CREATE TABLE sessions (
+CREATE IF NOT EXISTS TABLE sessions (
     token CHAR(43) PRIMARY KEY,
     data BLOB NOT NULL,
     expiry TIMESTAMP(6) NOT NULL
